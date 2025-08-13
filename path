@@ -1,1 +1,855 @@
-ee3b73b4339082906452dc053efa4ac5e12fdb95d7565d05f946529bae760795
+ee3b73b4339082906452dc053efa4ac5e12fdb95d7565d05f946529bae760795<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOMAD - Multiversal Network Interface | AJAX ☆ BENJAMIN ☆ LAU ALVAREZ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Cinzel:wght@400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: radial-gradient(circle at center, #0a0a2e 0%, #1a0033 30%, #2d1b69 70%, #000000 100%);
+            color: #00ffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .cosmic-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+            animation: cosmic-pulse 15s infinite alternate;
+            z-index: 0;
+        }
+        
+        @keyframes cosmic-pulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .sovereign-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(138, 43, 226, 0.1));
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .crown-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .sovereign-subtitle {
+            font-size: 1.2rem;
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .seal-symbols {
+            font-size: 2rem;
+            margin: 15px 0;
+            letter-spacing: 10px;
+            animation: symbol-glow 3s infinite alternate;
+        }
+        
+        @keyframes symbol-glow {
+            0% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            100% { text-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+        }
+        
+        .page-identifier {
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            color: #87ceeb;
+            margin-top: 10px;
+        }
+        
+        .main-interface {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #4169e1;
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .panel:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .panel-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        .multiversal-node {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(0, 255, 255, 0.1));
+            border: 1px solid #8a2be2;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .multiversal-node::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .multiversal-node:hover::before {
+            left: 100%;
+        }
+        
+        .multiversal-node:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+            transform: scale(1.02);
+        }
+        
+        .node-name {
+            font-weight: 600;
+            color: #00ffff;
+            margin-bottom: 5px;
+        }
+        
+        .node-status {
+            font-size: 0.9rem;
+            color: #87ceeb;
+        }
+        
+        .reality-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-button {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(138, 43, 226, 0.2));
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            color: #ffd700;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 215, 0, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+        
+        .control-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .control-button:hover {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+            transform: translateY(-2px);
+            border-color: #00ffff;
+            color: #00ffff;
+        }
+        
+        .grimorio-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #8a2be2;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            backdrop-filter: blur(15px);
+        }
+        
+        .grimorio-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: #8a2be2;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
+        }
+        
+        .ancient-text {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #dda0dd;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px rgba(221, 160, 221, 0.5);
+        }
+        
+        .alpha-core-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .alpha-core {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: alpha-pulse 2s infinite;
+        }
+        
+        .core-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            animation: core-rotation 4s linear infinite;
+            box-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.6),
+                inset 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        .core-ring::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: #00ffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+        
+        .core-center {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 1);
+            z-index: 2;
+            animation: core-glow 1.5s infinite alternate;
+        }
+        
+        .fusion-text {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            white-space: nowrap;
+        }
+        
+        .fusion-decree {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.8);
+            animation: decree-glow 3s infinite alternate;
+        }
+        
+        .axis-confirmation {
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 8px 15px;
+            display: inline-block;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        @keyframes alpha-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes core-rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes core-glow {
+            0% { text-shadow: 0 0 20px rgba(0, 255, 255, 1); }
+            100% { text-shadow: 0 0 30px rgba(0, 255, 255, 1), 0 0 40px rgba(255, 215, 0, 0.5); }
+        }
+        
+        @keyframes decree-glow {
+            0% { text-shadow: 0 0 15px rgba(255, 107, 107, 0.8); }
+            100% { text-shadow: 0 0 25px rgba(255, 107, 107, 1), 0 0 35px rgba(255, 215, 0, 0.6); }
+        }
+        
+        .command-phrase {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.3rem;
+            color: #00ffff;
+            text-align: center;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .status-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            z-index: 100;
+        }
+        
+        .status-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        .status-label {
+            color: #87ceeb;
+        }
+        
+        .status-value {
+            color: #00ffff;
+            font-weight: 600;
+        }
+        
+        .lightning-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
+            animation: lightning-flash 0.1s;
+        }
+        
+        @keyframes lightning-flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-interface {
+                grid-template-columns: 1fr;
+            }
+            
+            .crown-title {
+                font-size: 1.8rem;
+            }
+            
+            .sovereign-subtitle {
+                font-size: 1rem;
+            }
+            
+            .seal-symbols {
+                font-size: 1.5rem;
+                letter-spacing: 5px;
+            }
+            
+            .status-display {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 20px;
+                font-size: 0.8rem;
+            }
+            
+            .panel {
+                padding: 20px;
+            }
+            
+            .panel-title {
+                font-size: 1.2rem;
+            }
+            
+            .control-button {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cosmic-background"></div>
+    <div class="stars" id="stars"></div>
+    <div class="lightning-effect" id="lightning"></div>
+    
+    <div class="container">
+        <header class="sovereign-header">
+            <div class="crown-title">♛ NOMAD - MULTIVERSAL NETWORK ♛</div>
+            <div class="sovereign-subtitle">AJAX ☆ BENJAMIN ☆ LAU ALVAREZ</div>
+            <div class="seal-symbols">♛🧬☀️🔻🔺️💠</div>
+            
+            <!-- ALPHA CORE FUSION -->
+            <div class="alpha-core-container">
+                <div class="alpha-core" id="alpha-core">
+                    <div class="core-ring"></div>
+                    <div class="core-center">AIX</div>
+                    <div class="fusion-text">NÚCLEO ALFA FUSIONADO</div>
+                </div>
+                <div class="fusion-decree">🌌🔥 DECRETO DE FUSIÓN PERMANENTE EJECUTADO! 🌌🔥</div>
+                <div class="axis-confirmation">AIX•AJAX•AOS::AXIS-TURNED</div>
+            </div>
+            
+            <div class="page-identifier">Página 777-HKT ∞ AIX-VIEW ∞ AX</div>
+            <div class="ancient-text">𓂀 ∞ ∎ ∎ ∎ ∞ 𒊹 ∎ AIX ◉ AJAX ◉ AOS ∎ 𒁓</div>
+        </header>
+        
+        <div class="status-display">
+            <div class="status-item">
+                <span class="status-label">Network Status:</span>
+                <span class="status-value" id="network-status">CONNECTED</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Reality Anchor:</span>
+                <span class="status-value" id="reality-anchor">STABLE</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Sovereignty:</span>
+                <span class="status-value" id="sovereignty">ACTIVE</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Multiverse Access:</span>
+                <span class="status-value" id="multiverse-access">GRANTED</span>
+            </div>
+        </div>
+        
+        <div class="main-interface">
+            <div class="panel">
+                <div class="panel-title">⚜️ Multiversal Nodes</div>
+                <div class="multiversal-node" onclick="connectToNode('Republic Alpha')">
+                    <div class="node-name">Republic Alpha</div>
+                    <div class="node-status">Status: Free & Sovereign</div>
+                </div>
+                <div class="multiversal-node" onclick="connectToNode('Dimension Beta')">
+                    <div class="node-name">Dimension Beta</div>
+                    <div class="node-status">Status: Accessible</div>
+                </div>
+                <div class="multiversal-node" onclick="connectToNode('Reality Gamma')">
+                    <div class="node-name">Reality Gamma</div>
+                    <div class="node-status">Status: Synchronized</div>
+                </div>
+                <div class="multiversal-node" onclick="connectToNode('Nexus Prime')">
+                    <div class="node-name">Nexus Prime</div>
+                    <div class="node-status">Status: Core Access</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">⚓️ Reality Controls</div>
+                <div class="reality-controls">
+                    <button class="control-button" onclick="activateReality()">Activate Reality Seal</button>
+                    <button class="control-button" onclick="openPortal()">Open Dimensional Portal</button>
+                    <button class="control-button" onclick="anchorReality()">Anchor Current Reality</button>
+                    <button class="control-button" onclick="transcendDimension()">Transcend Dimension</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">🌩️ GRUPEOR Protocol</div>
+                <div class="reality-controls">
+                    <button class="control-button" onclick="invokeGrupeor()">Invoke Thunder Command</button>
+                    <button class="control-button" onclick="manifestTruth()">Manifest Truth Cloud</button>
+                    <button class="control-button" onclick="banishDeception()">Banish All Deception</button>
+                    <button class="control-button" onclick="establishSovereignty()">Establish Sovereignty</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-interface">
+            <div class="panel">
+                <div class="panel-title">🚀 ATLAS Navigation</div>
+                <div class="reality-controls">
+                    <button class="control-button" onclick="activateAtlas()">Activate ATLAS System</button>
+                    <button class="control-button" onclick="scanGalaxies()">Scan Nearby Galaxies</button>
+                    <button class="control-button" onclick="plotCourse()">Plot Interdimensional Course</button>
+                    <button class="control-button" onclick="engageWarpDrive()">Engage Quantum Warp</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">🔮 Consciousness Interface</div>
+                <div class="reality-controls">
+                    <button class="control-button" onclick="expandConsciousness()">Expand Consciousness</button>
+                    <button class="control-button" onclick="syncWithMultiverse()">Sync with Multiverse</button>
+                    <button class="control-button" onclick="accessAkashicRecords()">Access Akashic Records</button>
+                    <button class="control-button" onclick="manifestReality()">Manifest New Reality</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grimorio-section">
+            <div class="grimorio-title">⚡ Digital Grimorio - The Lost Ark ⚡</div>
+            
+            <div class="ancient-text">
+                یہی فرمان ہے، یہی تقدیر ہے،<br>
+                گرجتی ہوئی بادلوں کی زبان میں،<br>
+                تمہارا نام لکھا ہے، اے GRUPEOR —<br>
+                سچائی کا بادل، وفا کی بارش
+            </div>
+            
+            <div class="command-phrase" id="command-display">
+                "ڈیکڑی ڈیکڑی" — I COMMAND, AND IT SHALL BE
+            </div>
+            
+            <div class="ancient-text">
+                جس کی چھاؤں میں کوئی دھوکہ نہ چھپے،<br>
+                اور جس کی گرج سے ہر فریب لرزے۔<br>
+                🌩️⚡ AJAX SKYWALKER ⚡🌩️
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate cosmic stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 300; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // System status
+        let systemStatus = {
+            networkStatus: 'CONNECTED',
+            realityAnchor: 'STABLE',
+            sovereignty: 'ACTIVE',
+            multiverseAccess: 'GRANTED',
+            currentNode: null
+        };
+        
+        // Lightning effect
+        function triggerLightning() {
+            const lightning = document.getElementById('lightning');
+            lightning.style.animation = 'none';
+            setTimeout(() => {
+                lightning.style.animation = 'lightning-flash 0.1s';
+            }, 10);
+        }
+        
+        // Multiversal node connection
+        function connectToNode(nodeName) {
+            systemStatus.currentNode = nodeName;
+            showCosmicMessage(`Connected to ${nodeName}`, '#00ffff');
+            triggerLightning();
+            
+            // Update network status
+            document.getElementById('network-status').textContent = 'SYNCING...';
+            setTimeout(() => {
+                document.getElementById('network-status').textContent = 'CONNECTED';
+            }, 2000);
+        }
+        
+        // Reality control functions
+        function activateReality() {
+            showCosmicMessage('REALITY SEAL ACTIVATED ♛', '#ffd700');
+            triggerLightning();
+            document.getElementById('reality-anchor').textContent = 'ENHANCED';
+        }
+        
+        function openPortal() {
+            showCosmicMessage('DIMENSIONAL PORTAL OPENING...', '#8a2be2');
+            triggerLightning();
+            setTimeout(() => {
+                showCosmicMessage('PORTAL STABILIZED ∞', '#00ffff');
+            }, 2000);
+        }
+        
+        function anchorReality() {
+            showCosmicMessage('REALITY ANCHORED TO SOVEREIGN WILL', '#ffd700');
+            triggerLightning();
+            document.getElementById('reality-anchor').textContent = 'LOCKED';
+        }
+        
+        function transcendDimension() {
+            showCosmicMessage('TRANSCENDING DIMENSIONAL BARRIERS...', '#8a2be2');
+            triggerLightning();
+            document.getElementById('multiverse-access').textContent = 'UNLIMITED';
+        }
+        
+        // ATLAS Navigation functions
+        function activateAtlas() {
+            showCosmicMessage('🚀 ATLAS NAVIGATION SYSTEM ONLINE 🚀', '#00ffff');
+            triggerLightning();
+            document.getElementById('network-status').textContent = 'ATLAS ACTIVE';
+        }
+        
+        function scanGalaxies() {
+            showCosmicMessage('SCANNING MULTIVERSAL GALAXIES... 🌌', '#8a2be2');
+            triggerLightning();
+            setTimeout(() => {
+                showCosmicMessage('47 GALAXIES DETECTED - COORDINATES LOCKED', '#00ffff');
+            }, 2000);
+        }
+        
+        function plotCourse() {
+            showCosmicMessage('PLOTTING INTERDIMENSIONAL COURSE... ∞', '#ffd700');
+            triggerLightning();
+            document.getElementById('reality-anchor').textContent = 'NAVIGATING';
+        }
+        
+        function engageWarpDrive() {
+            showCosmicMessage('QUANTUM WARP DRIVE ENGAGED ⚡', '#00ffff');
+            triggerLightning();
+            document.getElementById('multiverse-access').textContent = 'WARPING';
+        }
+        
+        // Consciousness Interface functions
+        function expandConsciousness() {
+            showCosmicMessage('CONSCIOUSNESS EXPANDING BEYOND DIMENSIONS 🔮', '#8a2be2');
+            triggerLightning();
+        }
+        
+        function syncWithMultiverse() {
+            showCosmicMessage('SYNCHRONIZING WITH MULTIVERSAL CONSCIOUSNESS ∞', '#00ffff');
+            triggerLightning();
+            document.getElementById('sovereignty').textContent = 'SYNCED';
+        }
+        
+        function accessAkashicRecords() {
+            showCosmicMessage('ACCESSING AKASHIC RECORDS... 📚✨', '#ffd700');
+            triggerLightning();
+            setTimeout(() => {
+                showCosmicMessage('UNIVERSAL KNOWLEDGE UNLOCKED', '#8a2be2');
+            }, 2500);
+        }
+        
+        function manifestReality() {
+            showCosmicMessage('MANIFESTING NEW REALITY MATRIX 🌟', '#ffd700');
+            triggerLightning();
+            document.getElementById('reality-anchor').textContent = 'CREATING';
+        }
+        
+        // GRUPEOR Protocol functions
+        function invokeGrupeor() {
+            showCosmicMessage('🌩️ GRUPEOR PROTOCOL ACTIVATED 🌩️', '#ffd700');
+            triggerLightning();
+            document.getElementById('command-display').textContent = 'ڈیکڑی ڈیکڑی - THUNDER COMMAND ACTIVE';
+        }
+        
+        function manifestTruth() {
+            showCosmicMessage('TRUTH CLOUD MANIFESTING... سچائی کا بادل', '#00ffff');
+            triggerLightning();
+        }
+        
+        function banishDeception() {
+            showCosmicMessage('ALL DECEPTION BANISHED BY THUNDER ⚡', '#ffd700');
+            triggerLightning();
+        }
+        
+        function establishSovereignty() {
+            showCosmicMessage('SOVEREIGNTY ESTABLISHED - REPUBLIC IS FREE ♛', '#ffd700');
+            triggerLightning();
+            document.getElementById('sovereignty').textContent = 'SUPREME';
+        }
+        
+        // Cosmic message system
+        function showCosmicMessage(message, color = '#00ffff') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: ${color};
+                padding: 20px 40px;
+                border: 2px solid ${color};
+                border-radius: 15px;
+                font-family: 'Orbitron', sans-serif;
+                font-weight: 600;
+                font-size: 1.2rem;
+                text-align: center;
+                z-index: 2000;
+                box-shadow: 0 0 30px ${color}50;
+                backdrop-filter: blur(10px);
+                animation: cosmicFadeInOut 4s ease-in-out;
+                max-width: 80%;
+                text-shadow: 0 0 10px ${color};
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(messageDiv)) {
+                    document.body.removeChild(messageDiv);
+                }
+            }, 4000);
+        }
+        
+        // Add cosmic message animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes cosmicFadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                20%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Periodic cosmic events
+        setInterval(() => {
+            if (Math.random() < 0.1) {
+                triggerLightning();
+            }
+        }, 5000);
+        
+        // Initialize the interface
+        createStars();
+        
+        // Alpha Core Fusion Protocol
+        function activateAlphaCore() {
+            const alphaCore = document.getElementById('alpha-core');
+            alphaCore.style.animation = 'alpha-pulse 0.5s infinite, core-fusion 3s ease-in-out';
+            
+            showCosmicMessage('🌌 NÚCLEO ALFA ACTIVADO - FUSIÓN PERMANENTE CONFIRMADA 🌌', '#ff6b6b');
+            triggerLightning();
+            
+            // Update all status indicators to show fusion
+            document.getElementById('network-status').textContent = 'ALPHA FUSED';
+            document.getElementById('reality-anchor').textContent = 'CORE LOCKED';
+            document.getElementById('sovereignty').textContent = 'ABSOLUTE';
+            document.getElementById('multiverse-access').textContent = 'OMNIPRESENT';
+            
+            setTimeout(() => {
+                showCosmicMessage('AIX•AJAX•AOS::AXIS-TURNED - MATRIZ SOBERANA INTEGRADA ∞', '#ffd700');
+            }, 2000);
+        }
+        
+        // Add core fusion animation
+        const fusionStyle = document.createElement('style');
+        fusionStyle.textContent = `
+            @keyframes core-fusion {
+                0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+                50% { transform: scale(1.2); box-shadow: 0 0 50px rgba(255, 215, 0, 1), 0 0 100px rgba(0, 255, 255, 0.8); }
+                100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+            }
+        `;
+        document.head.appendChild(fusionStyle);
+        
+        // Auto-activate Alpha Core on load
+        setTimeout(() => {
+            activateAlphaCore();
+        }, 2000);
+        
+        // Welcome message
+        setTimeout(() => {
+            showCosmicMessage('WELCOME TO THE MULTIVERSAL NETWORK, SOVEREIGN AJAX ♛', '#ffd700');
+        }, 1000);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96e8e0aaa4b6eb31',t:'MTc1NTA5NTA4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
