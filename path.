@@ -1,0 +1,450 @@
+import javafx.animation.*;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.*;
+import javafx.scene.effect.*;
+import javafx.scene.layout.*;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
+import javafx.scene.text.*;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.io.File;
+import java.util.Random;
+
+public class NucleoOraculosFX extends Application {
+
+    // ===== Dimensiones base (escala automática con la ventana)
+    private static final double BASE_W = 1200;
+    private static final double BASE_H = 800;
+
+    // ===== Colores y estilos
+    private static final Color COL_BG_INNER = Color.web("#0a0a23");
+    private static final Color COL_ACCENT_LUNAR = Color.web("#7dd3fc");
+    private static final Color COL_ACCENT_SOLAR = Color.web("#ff6b6b");
+    private static final Color COL_SEAL = Color.web("#ffd86b");
+
+    // ===== Nodos principales
+    private StackPane root;
+    private StackPane container;
+    private Circle fusionSeal;
+    private VBox lunarDecree;
+    private VBox solarDecree;
+    private Group haloRings;
+    private Pane starLayer;
+    private Pane particleLayer;
+
+    // ===== Audio opcional
+    private MediaPlayer mp888;
+
+    // ===== Utilidad
+    private final Random RND = new Random();
+
+    @Override
+    public void start(Stage stage) {
+        root = new StackPane();
+        root.setBackground(new Background(new BackgroundFill(
+                new RadialGradient(0, 0, 0.5, 0.5, 1, true, CycleMethod.NO_CYCLE,
+                        new Stop(0, COL_BG_INNER), new Stop(1, Color.BLACK)), null, null)));
+
+        // Cielo estelar + partículas
+        starLayer = createStarField(350);
+        particleLayer = new Pane();
+        particleLayer.setPickOnBounds(false);
+        root.getChildren().addAll(starLayer, particleLayer);
+
+        // Santuario central
+        container = createOraclesContainer();
+        root.getChildren().add(container);
+
+        // Escena y cámara
+        Scene scene = new Scene(root, BASE_W, BASE_H, true);
+        var cam = new PerspectiveCamera(true);
+        cam.setTranslateZ(-1500); // ligera perspectiva
+        scene.setCamera(cam);
+
+        stage.setTitle("Núcleo de Oráculos – Fusión Dragónica Solar‑Estelar");
+        stage.setScene(scene);
+        stage.show();
+
+        // Ajuste responsivo (escala completa del contenido)
+        root.layoutBoundsProperty().addListener((obs, oldB, newB) -> {
+            double scale = Math.min(newB.getWidth() / BASE_W, newB.getHeight() / BASE_H);
+            container.setScaleX(scale);
+            container.setScaleY(scale);
+        });
+
+        // Audio 888 Hz (opcional)
+        setupAudio("888hz.mp3");
+
+        // Interacciones
+        scene.setOnMouseClicked(e -> activateSequence());
+        scene.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case SPACE -> activateSequence();
+                case DIGIT8 -> play888();
+                case R -> resetSequence();
+                default -> { /* noop */ }
+            }
+        });
+
+        // Efectos continuos
+        startHaloBreath();
+        startAmbientParticles();
+    }
+
+    // ---------- Construcción de UI ----------
+    private Pane createStarField(int count) {
+        Pane stars = new Pane();
+        stars.setMinSize(BASE_W, BASE_H);
+        stars.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        for (int i = 0; i < count; i++) {
+            double r = 0.6 + RND.nextDouble() * 1.7;
+            Circle star = new Circle(RND.nextDouble() * BASE_W, RND.nextDouble() * BASE_H, r, Color.WHITE);
+            star.setOpacity(0.25 + RND.nextDouble() * 0.7);
+
+            // Parpadeo suave
+            Timeline twinkle = new Timeline(
+                    new KeyFrame(Duration.ZERO, new KeyValue(star.opacityProperty(), star.getOpacity())),
+                    new KeyFrame(Duration.seconds(2 + RND.nextDouble() * 4),
+                            new KeyValue(star.opacityProperty(), star.getOpacity() * (0.25 + RND.nextDouble() * 0.4)))
+            );
+            twinkle.setAutoReverse(true);
+            twinkle.setCycleCount(Animation.INDEFINITE);
+            twinkle.play();
+
+            stars.getChildren().add(star);
+        }
+        return stars;
+    }
+
+    private StackPane createOraclesContainer() {
+        StackPane wrap = new StackPane();
+        wrap.setMinSize(BASE_W, BASE_H);
+        wrap.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        // Sello central (anillos + disco)
+        fusionSeal = new Circle(170, Color.TRANSPARENT);
+        fusionSeal.setStroke(COL_SEAL);
+        fusionSeal.setStrokeWidth(3);
+        fusionSeal.setEffect(new Glow(0.9));
+
+        // Halo rings
+        haloRings = createHaloRings();
+        StackPane.setAlignment(haloRings, Pos.CENTER);
+
+        // Cajas de decreto
+        lunarDecree = createDecreeBox(
+                "La Sangre que Alimenta la Luna",
+                """
+                “La sangre me reconoce.
+                El cristal ya no está fuera.
+                Ahora soy yo.
+                Yo soy la Luna Viva en carne solar.”""",
+                COL_ACCENT_LUNAR);
+
+        solarDecree = createDecreeBox(
+                "Fusión Dragónica del Linaje Solar‑Estelar",
+                """
+                “Yo, BlackSeraphix, uno mis sellos.
+                Lo que estaba disperso, ahora arde en uno solo.
+                Mi Dragón, mi Cubo, mi Ojo y mi Llave… ya no están separados.
+
+                Soy el Portal. Soy el Código. Soy el Eje.
+                Lo que vine a despertar… YA ESTÁ DESPIERTO.”""",
+                COL_ACCENT_SOLAR);
+
+        // Posiciones iniciales/estados
+        lunarDecree.setTranslateX(-320);
+        solarDecree.setTranslateX(320);
+        lunarDecree.setOpacity(0);
+        solarDecree.setOpacity(0);
+
+        // Layout interno
+        StackPane inner = new StackPane(fusionSeal, haloRings, lunarDecree, solarDecree);
+        inner.setPadding(new Insets(40));
+        wrap.getChildren().add(inner);
+
+        return wrap;
+    }
+
+    private Group createHaloRings() {
+        Group g = new Group();
+        for (int i = 0; i < 3; i++) {
+            Circle c = new Circle(170 + i * 26);
+            c.setFill(Color.TRANSPARENT);
+            c.setStroke(i % 2 == 0 ? COL_ACCENT_LUNAR : COL_ACCENT_SOLAR);
+            c.setStrokeWidth(1.5);
+            c.getStrokeDashArray().setAll(16.0, 10.0);
+            c.setOpacity(0.0);
+
+            // Pulso escalonado
+            Timeline t = new Timeline(
+                    new KeyFrame(Duration.ZERO,
+                            new KeyValue(c.opacityProperty(), 0.0),
+                            new KeyValue(c.strokeDashOffsetProperty(), 0)),
+                    new KeyFrame(Duration.seconds(1.2),
+                            new KeyValue(c.opacityProperty(), 0.9)),
+                    new KeyFrame(Duration.seconds(2.4),
+                            new KeyValue(c.opacityProperty(), 0.0),
+                            new KeyValue(c.strokeDashOffsetProperty(), 48))
+            );
+            t.setDelay(Duration.seconds(i * 0.4));
+            t.setCycleCount(Animation.INDEFINITE);
+            t.play();
+
+            g.getChildren().add(c);
+        }
+        return g;
+    }
+
+    private VBox createDecreeBox(String title, String text, Color color) {
+        VBox box = new VBox(18);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(28));
+        box.setBackground(new Background(new BackgroundFill(
+                Color.color(0, 0, 0, 0.1), new CornerRadii(16), null)));
+        box.setBorder(new Border(new BorderStroke(
+                color, BorderStrokeStyle.SOLID, new CornerRadii(16), new BorderWidths(2))));
+        box.setEffect(new DropShadow(30, color.deriveColor(0, 1, 1, 0.25)));
+
+        Text titleText = new Text(title);
+        titleText.setFont(Font.font("Cinzel", FontWeight.BOLD, 30));
+        titleText.setFill(color);
+        titleText.setEffect(new Glow(0.6));
+
+        Text body = new Text(text);
+        body.setFont(Font.font("Georgia", 20));
+        body.setFill(Color.WHITE);
+        body.setTextAlignment(TextAlignment.CENTER);
+        body.setWrappingWidth(440);
+
+        Text signature = new Text("— BlackSeraphix");
+        signature.setFont(Font.font("Cinzel", FontWeight.BOLD, 18));
+        signature.setFill(color);
+
+        box.getChildren().addAll(titleText, body, signature);
+        return box;
+    }
+
+    // ---------- Secuencia ----------
+    private void activateSequence() {
+        // Evita solapamientos: deshabilita interacción durante la secuencia
+        root.setDisable(true);
+
+        // 1) Decreto Lunar entra
+        var lunarIn = new ParallelTransition(
+                fade(lunarDecree, 0, 1, 1.6),
+                moveX(lunarDecree, lunarDecree.getTranslateX(), 0, 1.6, Interpolator.EASE_BOTH)
+        );
+
+        // 2) Pausa contemplativa
+        var pause1 = new PauseTransition(Duration.seconds(0.6));
+
+        // 3) Decreto Solar entra
+        var solarIn = new ParallelTransition(
+                fade(solarDecree, 0, 1, 1.6),
+                moveX(solarDecree, solarDecree.getTranslateX(), 0, 1.6, Interpolator.EASE_BOTH)
+        );
+
+        // 4) Pausa
+        var pause2 = new PauseTransition(Duration.seconds(1.2));
+
+        // 5) Fusión: disolver decretos + revelar sello gradiente + onda
+        var fusionReveal = new ParallelTransition(
+                fade(lunarDecree, 1, 0, 1.2),
+                fade(solarDecree, 1, 0, 1.2),
+                scale(fusionSeal, 0.2, 0.2, 1.0, 1.0, 1.2, Interpolator.EASE_OUT),
+                revealSealFill(fusionSeal, 1.8),
+                burstWave(180, 1400, 2.0)
+        );
+
+        // 6) Audio 888 (si está disponible)
+        var play888 = new PauseTransition(Duration.millis(10));
+        play888.setOnFinished(e -> play888());
+
+        // 7) Mantener pulso y reactivar interacción
+        var enable = new PauseTransition(Duration.seconds(0.2));
+        enable.setOnFinished(e -> root.setDisable(false));
+
+        new SequentialTransition(lunarIn, pause1, solarIn, pause2, fusionReveal, play888, enable).play();
+    }
+
+    private void resetSequence() {
+        lunarDecree.setOpacity(0);
+        solarDecree.setOpacity(0);
+        lunarDecree.setTranslateX(-320);
+        solarDecree.setTranslateX(320);
+        fusionSeal.setFill(Color.TRANSPARENT);
+        // mantener halo activo, nada más
+    }
+
+    // ---------- Anim helpers ----------
+    private FadeTransition fade(Node n, double from, double to, double sec) {
+        var ft = new FadeTransition(Duration.seconds(sec), n);
+        ft.setFromValue(from);
+        ft.setToValue(to);
+        return ft;
+    }
+
+    private TranslateTransition moveX(Node n, double from, double to, double sec, Interpolator interp) {
+        var tt = new TranslateTransition(Duration.seconds(sec), n);
+        n.setTranslateX(from);
+        tt.setToX(to);
+        tt.setInterpolator(interp);
+        return tt;
+    }
+
+    private ScaleTransition scale(Node n, double fx, double fy, double tx, double ty, double sec, Interpolator interp) {
+        var st = new ScaleTransition(Duration.seconds(sec), n);
+        st.setFromX(fx);
+        st.setFromY(fy);
+        st.setToX(tx);
+        st.setToY(ty);
+        st.setInterpolator(interp);
+        return st;
+    }
+
+    private FillTransition revealSealFill(Circle seal) {
+        var ft = new FillTransition(Duration.seconds(1.8), seal);
+        ft.setFromValue(Color.TRANSPARENT);
+        ft.setToValue(new RadialGradient(
+                0, 0, 0.5, 0.5, 0.85, true, CycleMethod.NO_CYCLE,
+                new Stop(0.00, COL_ACCENT_LUNAR),
+                new Stop(0.50, COL_SEAL.deriveColor(0,1,1,0.85)),
+                new Stop(1.00, COL_ACCENT_SOLAR)));
+        return ft;
+    }
+
+    private ParallelTransition burstWave(double startR, double endR, double sec) {
+        Circle wave = new Circle(startR);
+        wave.setStroke(COL_SEAL);
+        wave.setStrokeWidth(2.0);
+        wave.setFill(Color.TRANSPARENT);
+        wave.setEffect(new Glow(0.9));
+        container.getChildren().add(wave);
+
+        var grow = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                        new KeyValue(wave.radiusProperty(), startR),
+                        new KeyValue(wave.opacityProperty(), 0.95)),
+                new KeyFrame(Duration.seconds(sec),
+                        new KeyValue(wave.radiusProperty(), endR),
+                        new KeyValue(wave.opacityProperty(), 0.0))
+        );
+        grow.setOnFinished(e -> container.getChildren().remove(wave));
+
+        // chispas sutiles
+        var sparks = new ParallelTransition();
+        for (int i = 0; i < 18; i++) {
+            sparks.getChildren().add(spawnSpark());
+        }
+        return new ParallelTransition(grow, sparks);
+    }
+
+    private Animation spawnSpark() {
+        Circle s = new Circle(1.5, Color.WHITE);
+        s.setOpacity(0.9);
+        s.setEffect(new Bloom(0.8));
+        container.getChildren().add(s);
+
+        double ang = RND.nextDouble() * Math.PI * 2;
+        double dist = 200 + RND.nextDouble() * 400;
+
+        var path = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                        new KeyValue(s.translateXProperty(), 0),
+                        new KeyValue(s.translateYProperty(), 0),
+                        new KeyValue(s.opacityProperty(), 1.0)),
+                new KeyFrame(Duration.seconds(0.8 + RND.nextDouble() * 0.6),
+                        new KeyValue(s.translateXProperty(), Math.cos(ang) * dist, Interpolator.EASE_OUT),
+                        new KeyValue(s.translateYProperty(), Math.sin(ang) * dist, Interpolator.EASE_OUT),
+                        new KeyValue(s.opacityProperty(), 0.0))
+        );
+        path.setOnFinished(e -> container.getChildren().remove(s));
+        return path;
+    }
+
+    private void startHaloBreath() {
+        // respiración del sello (sutileza continua)
+        var pulse = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                        new KeyValue(fusionSeal.scaleXProperty(), 1.0),
+                        new KeyValue(fusionSeal.scaleYProperty(), 1.0),
+                        new KeyValue(fusionSeal.opacityProperty(), 0.85)),
+                new KeyFrame(Duration.seconds(1.6),
+                        new KeyValue(fusionSeal.scaleXProperty(), 1.06),
+                        new KeyValue(fusionSeal.scaleYProperty(), 1.06),
+                        new KeyValue(fusionSeal.opacityProperty(), 1.0)),
+                new KeyFrame(Duration.seconds(3.2),
+                        new KeyValue(fusionSeal.scaleXProperty(), 1.0),
+                        new KeyValue(fusionSeal.scaleYProperty(), 1.0),
+                        new KeyValue(fusionSeal.opacityProperty(), 0.85))
+        );
+        pulse.setCycleCount(Animation.INDEFINITE);
+        pulse.play();
+    }
+
+    private void startAmbientParticles() {
+        // burbujeo lento y muy tenue
+        Timeline emitter = new Timeline(new KeyFrame(Duration.seconds(0.25), e -> {
+            if (particleLayer.getChildren().size() > 160) return;
+            Circle p = new Circle(1.2 + RND.nextDouble() * 1.2, Color.WHITE);
+            p.setOpacity(0.12);
+            p.setTranslateX(RND.nextDouble() * BASE_W - BASE_W / 2);
+            p.setTranslateY(RND.nextDouble() * BASE_H - BASE_H / 2);
+            p.setEffect(new GaussianBlur(1.5));
+            particleLayer.getChildren().add(p);
+
+            var drift = new Timeline(
+                    new KeyFrame(Duration.ZERO,
+                            new KeyValue(p.translateXProperty(), p.getTranslateX()),
+                            new KeyValue(p.translateYProperty(), p.getTranslateY()),
+                            new KeyValue(p.opacityProperty(), p.getOpacity())),
+                    new KeyFrame(Duration.seconds(6 + RND.nextDouble() * 6),
+                            new KeyValue(p.translateXProperty(), p.getTranslateX() + (RND.nextDouble() * 80 - 40), Interpolator.EASE_BOTH),
+                            new KeyValue(p.translateYProperty(), p.getTranslateY() - (40 + RND.nextDouble() * 80), Interpolator.EASE_BOTH),
+                            new KeyValue(p.opacityProperty(), 0.0))
+            );
+            drift.setOnFinished(x -> particleLayer.getChildren().remove(p));
+            drift.play();
+        }));
+        emitter.setCycleCount(Animation.INDEFINITE);
+        emitter.play();
+    }
+
+    // ---------- Audio ----------
+    private void setupAudio(String filename) {
+        try {
+            var media = new Media(new File(filename).toURI().toString());
+            mp888 = new MediaPlayer(media);
+            mp888.setCycleCount(MediaPlayer.INDEFINITE);
+            mp888.setVolume(0.75);
+        } catch (Exception ignore) {
+            mp888 = null; // si no hay archivo, el flujo visual igual funciona
+        }
+    }
+
+    private void play888() {
+        if (mp888 == null) return;
+        mp888.stop();
+        mp888.play();
+        // leve realce visual cuando entra 888 Hz
+        container.setEffect(new Glow(0.0));
+        var glow = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(((Glow) container.getEffect()).levelProperty(), 0.0)),
+                new KeyFrame(Duration.seconds(0.8), new KeyValue(((Glow) container.getEffect()).levelProperty(), 0.6)),
+                new KeyFrame(Duration.seconds(1.6), new KeyValue(((Glow) container.getEffect()).levelProperty(), 0.0))
+        );
+        glow.play();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
