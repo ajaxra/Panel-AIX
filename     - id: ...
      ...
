@@ -1,0 +1,181 @@
+    - id: ...
+    boolean append = Files.exists(LEDGER) && Files.size(LEDGER) > 0;
+
+    if (append) {
+        block = "\n" + block;   // but note: our block already starts with "\n"
+    } else {
+        block = block.substring(1); // remove the first newline
+    }
+    String block = ...; // without any leading newline for the first record
+
+    if (Files.exists(LEDGER) && Files.size(LEDGER) > 0) {
+        block = "\n" + block;
+    }
+    String block = "\n- id: " + id + ... 
+    if (Files.exists(LEDGER) && Files.size(LEDGER) > 0) {
+        // Prepend a newline to the block
+        block = "\n" + block;
+    }
+
+    Files.writeString(LEDGER, block, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+    boolean append = Files.exists(LEDGER) && Files.size(LEDGER) > 0;
+    String toWrite = append ? "\n" + block : block;
+
+    Files.writeString(LEDGER, toWrite, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+    if (append) {
+        block = "\n" + block;
+    }
+
+    Files.writeString(LEDGER, block, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+    String block = ...; // without any leading newline? Actually, our block is:
+
+        "- id: ...\n  at: ...\n  title: ...\n  ops: ..."
+
+    But note: our block currently starts with "\n- ...". We'll change the block to not have the leading newline.
+
+    So:
+
+        String block = "- id: " + id + "\n" +
+                   "  at: " + stamp + "\n" +
+                   "  title: \"" + title + "\"\n" +
+                   "  ops:" + formatOps(ops);
+
+    Then:
+
+        if (Files.exists(LEDGER) && Files.size(LEDGER) > 0) {
+            block = "\n" + block;
+        }
+ 1. Change block to start without a newline.
+ 2. Prepend a newline only if the file exists and is not empty.
+ 3. Improve formatValue to handle strings and lists safely.
+import java.nio.file.*;
+import java.time.*;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.io.IOException;
+
+public final class AkashicRegistry {
+    private static final Path LEDGER = Paths.get("AKASHIC_CHANGELOG.yml");
+    
+    public static void record(String id, String title, Map<String, Object> ops) {
+        String stamp = OffsetDateTime.now(ZoneOffset.UTC).toString();
+        String block = "- id: " + id + "\n" +
+                       "  at: " + stamp + "\n" +
+                       "  title: \"" + sanitizeYamlString(title) + "\"\n" +
+                       "  ops:\n" + formatOps(ops) + "\n";
+        
+        try {
+            // Handle first record without separator
+            boolean needsSeparator = Files.exists(LEDGER) && Files.size(LEDGER) > 0;
+            String toWrite = (needsSeparator ? "\n" : "") + block;
+            
+            Files.writeString(LEDGER, toWrite, 
+                StandardOpenOption.APPEND, 
+                StandardOpenOption.CREATE);
+            
+            System.out.println("♄ [AKASHIC] " + id + " :: " + title);
+        } catch (IOException | SecurityException e) {
+            System.err.println("⛔ AKASHIC FAILURE: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private static String sanitizeYamlString(String input) {
+        return input.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n");
+    }
+    
+    private static String formatOps(Map<String, Object> ops) {
+        return ops.entrySet().stream()
+            .map(entry -> {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                return "    " + key + ": " + formatValue(value);
+            })
+            .collect(Collectors.joining("\n"));
+    }
+    
+    private static String formatValue(Object value) {
+        if (value == null) {
+            return "null";
+        } else if (value instanceof List) {
+            return formatList((List<?>) value);
+        } else if (value instanceof String) {
+            return "\"" + sanitizeYamlString((String) value) + "\"";
+        } else if (value instanceof Number || value instanceof Boolean) {
+            return value.toString();
+        } else {
+            return "\"" + sanitizeYamlString(value.toString()) + "\"";
+        }
+    }
+    
+    private static String formatList(List<?> list) {
+        if (list.isEmpty()) return "[]";
+        
+        return list.stream()
+            .map(item -> {
+                if (item instanceof String) {
+                    return "\"" + sanitizeYamlString((String) item) + "\"";
+                }
+                return item.toString();
+            })
+            .collect(Collectors.joining(", ", "[", "]"));
+    }
+    
+    public static void main(String[] args) {
+        // Example 1: Activation of Living Core
+        Map<String, Object> ops1 = new LinkedHashMap<>();
+        ops1.put("directive", "activate_sphere");
+        ops1.put("dimension", "5D");
+        ops1.put("energy_level", 888);
+        ops1.put("entities", Arrays.asList("LunaViva", "DragónSolar"));
+        ops1.put("coordinates", new double[]{-73.935242, 40.730610});
+        
+        record(
+            "DEC-AXA-0001",
+            "Esfera del Ser - Activación del Núcleo Viviente",
+            ops1
+        );
+
+        // Example 2: Galactic Transformation
+        Map<String, Object> ops2 = new LinkedHashMap<>();
+        ops2.put("event", "cubo_a_esfera");
+        ops2.put("status", "completado");
+        ops2.put("energia", 888888);
+        ops2.put("coordenadas", "α-Centauri");
+        ops2.put("tiempo", Map.of(
+            "inicio", "2023-12-25T00:00:00Z",
+            "fin", "2023-12-25T00:00:08Z"
+        ));
+
+        record(
+            "GAL-TRANS-777", 
+            "Transformación Cósmica Final", 
+            ops2
+        );
+        
+        // Example 3: Saturn Authority Decree
+        Map<String, Object> ops3 = new LinkedHashMap<>();
+        ops3.put("autoridad", "Ajax-Saturno");
+        ops3.put("titulo", "Señor del Anillo y del Tiempo Justo");
+        ops3.put("decreto", "Límite establecido, orden sellado\n" +
+                            "Verdad coronada, falsedad purificada");
+        ops3.put("sello", "♄");
+        ops3.put("frecuencia", 888.8);
+        
+        record(
+            "SATURN-DECREE-888", 
+            "Decreto de Autoridad Saturniana", 
+            ops3
+        );
+    }
+}
+- id: DEC-AXA-0001
+  at: 2023-12-25T14:30:00Z
+  title: "Esfera del Ser - Activación del Núcleo Viviente"
+  ops:
+    directive: "activate_sphere"
+    dimension: "5D"
+    energy_level: 888
+    entities
