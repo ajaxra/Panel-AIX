@@ -1,4 +1,486 @@
-ee3b73b4339082906452dc053efa4ac5e12fdb95d7565d05f946529bae760795<!DOCTYPE html>
+import javafx.animation.*;
+import javafx.application.Application;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.*;
+import javafx.scene.control.Button;
+import javafx.scene.effect.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
+import javafx.scene.text.*;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Random;
+
+public class VeilBreakRitual extends Application {
+
+    private static final String MANTRA = "ॐ क्षं क्षयं क्षयकराय हूं फट् स्वाहा";
+    private static final String ENGLISH_MANTRA = "OM KṢAṂ KṢAYAṂ KṢAYAKARĀYA HŪṂ PHAṬ SVĀHĀ";
+    private static final String DESCRIPTIVE_MANTRA = "Mantra de destrucción de ilusiones y velos kármicos";
+
+    private final Random rng = new Random();
+    private Text karmaText;
+    private double karmaPercent = 100.0;
+    private boolean broken = false;
+
+    public static void main(String[] args) { launch(args); }
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Capa base de coordenadas absolutas
+        Group world = new Group();
+
+        // UI overlay con layout
+        StackPane root = new StackPane(world);
+        Scene scene = new Scene(root, 1200, 800, Color.BLACK);
+
+        // Fondo, yantra, figura
+        createCosmicBackground(world);
+        createSriYantra(world);
+        createDivineFigure(world);
+
+        // Velos
+        Group veils = createIllusionVeils();
+        world.getChildren().add(veils);
+
+        // Textos
+        createSacredTexts(world);
+
+        // Contador kármico
+        createKarmicCounter(world);
+
+        // Botón “ROMPER VELO”
+        Button breakBtn = new Button("ROMPER VELO");
+        breakBtn.setStyle(
+            "-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1a1a2e;" +
+            "-fx-background-color: linear-gradient(#ffe082, #ffd54f);" +
+            "-fx-padding: 10 18; -fx-background-radius: 12;"
+        );
+        breakBtn.setOnAction(e -> triggerBreak(veils, world, root));
+
+        HBox bottomBar = new HBox(breakBtn);
+        bottomBar.setAlignment(Pos.CENTER);
+        bottomBar.setPadding(new Insets(12));
+        StackPane.setAlignment(bottomBar, Pos.BOTTOM_CENTER);
+        root.getChildren().add(bottomBar);
+
+        // Tecla SPACE
+        scene.setOnKeyPressed(e -> { if (!broken && e.getCode().toString().equals("SPACE")) triggerBreak(veils, world, root); });
+
+        // Auto-disparo a los 6s
+        PauseTransition auto = new PauseTransition(Duration.seconds(6));
+        auto.setOnFinished(e -> { if (!broken) triggerBreak(veils, world, root); });
+        auto.play();
+
+        primaryStage.setTitle("Ritual de Ruptura de Velos");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void triggerBreak(Group veils, Group world, StackPane root) {
+        if (broken) return;
+        broken = true;
+
+        // GONG
+        new Thread(this::playGong).start();
+
+        // Destello
+        Rectangle flash = new Rectangle(1200, 800, Color.color(1, 0.9, 0.6, 0.0));
+        world.getChildren().add(flash);
+
+        Node outer = veils.getChildren().get(0);
+        Node web   = veils.getChildren().get(1);
+
+        FadeTransition fadeOuter = new FadeTransition(Duration.seconds(2.2), outer);
+        fadeOuter.setFromValue(1.0);  fadeOuter.setToValue(0.0);
+
+        ScaleTransition scaleWeb = new ScaleTransition(Duration.seconds(2.2), web);
+        scaleWeb.setFromX(1); scaleWeb.setFromY(1); scaleWeb.setToX(1.25); scaleWeb.setToY(1.25);
+
+        FadeTransition fadeWeb = new FadeTransition(Duration.seconds(2.2), web);
+        fadeWeb.setFromValue(0.85);   fadeWeb.setToValue(0.0);
+
+        Timeline flashTl = new Timeline(
+            new KeyFrame(Duration.ZERO,         new KeyValue(flash.opacityProperty(), 0.0)),
+            new KeyFrame(Duration.seconds(0.15),new KeyValue(flash.opacityProperty(), 0.55)),
+            new KeyFrame(Duration.seconds(0.45),new KeyValue(flash.opacityProperty(), 0.0))
+        );
+
+        ParallelTransition pt = new ParallelTransition(fadeOuter, scaleWeb, fadeWeb);
+        SequentialTransition seq = new SequentialTransition(flashTl, pt);
+        seq.setOnFinished(e -> {
+            world.getChildren().remove(flash);
+            animateKarmaTo(0);            // baja a 0%
+            saveSelloSnapshot(root);      // guarda PNG
+            toast(root, "Sello guardado: sello_ruptura.png");
+        });
+        seq.play();
+    }
+
+    /* ================= COSMOS ================= */
+    private void createCosmicBackground(Group root) {
+        Rectangle bg = new Rectangle(1200, 800);
+        bg.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#000010")),
+                new Stop(1, Color.web("#1a1a2e"))
+        ));
+        root.getChildren().add(bg);
+
+        createNebula(root, 300, 200, 150, Color.PURPLE, 0.4);
+        createNebula(root, 900, 600, 200, Color.DARKBLUE, 0.3);
+        createNebula(root, 200, 600, 120, Color.DARKRED, 0.5);
+
+        createStars(root, 320);
+    }
+
+    private void createNebula(Group root, double x, double y, double radius, Color color, double opacity) {
+        Circle nebula = new Circle(x, y, radius);
+        nebula.setFill(new RadialGradient(
+                0, 0, 0.5, 0.5, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, color.deriveColor(0, 1, 1, opacity)),
+                new Stop(1, Color.TRANSPARENT)
+        ));
+        root.getChildren().add(nebula);
+    }
+
+    private void createStars(Group root, int count) {
+        Random rand = new Random();
+        for (int i = 0; i < count; i++) {
+            Circle star = new Circle(rand.nextInt(1200), rand.nextInt(800),
+                    rand.nextDouble() * 1.5 + 0.5, Color.WHITE);
+            star.setOpacity(rand.nextDouble() * 0.5 + 0.2);
+
+            FadeTransition twinkle = new FadeTransition(Duration.seconds(rand.nextDouble() * 3 + 2), star);
+            twinkle.setFromValue(0.2);
+            twinkle.setToValue(0.8);
+            twinkle.setCycleCount(Animation.INDEFINITE);
+            twinkle.setAutoReverse(true);
+            twinkle.play();
+
+            root.getChildren().add(star);
+        }
+    }
+
+    /* ================= SRI YANTRA ================= */
+    private void createSriYantra(Group root) {
+        Group yantra = new Group();
+        yantra.setLayoutX(600);
+        yantra.setLayoutY(400);
+
+        for (int i = 0; i < 4; i++) {
+            Circle ring = new Circle(0, 0, 200 - i * 30);
+            ring.setFill(Color.TRANSPARENT);
+            ring.setStroke(Color.GOLD);
+            ring.setStrokeWidth(1.2);
+            ring.setOpacity(0.75);
+            yantra.getChildren().add(ring);
+        }
+
+        for (int i = 0; i < 8; i++) {
+            double size = 150;
+            Polygon tri = new Polygon(
+                    0.0, -size * Math.cos(Math.toRadians(30)),
+                    -size, size * Math.sin(Math.toRadians(30)),
+                    size, size * Math.sin(Math.toRadians(30))
+            );
+            tri.setFill(Color.TRANSPARENT);
+            tri.setStroke(Color.web("#ff5722"));
+            tri.setStrokeWidth(1.5);
+            tri.setRotate(i * 45);
+            yantra.getChildren().add(tri);
+        }
+
+        Circle bindu = new Circle(0, 0, 15);
+        bindu.setFill(new RadialGradient(
+                0, 0, 0.5, 0.5, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.GOLD),
+                new Stop(1, Color.TRANSPARENT)
+        ));
+        bindu.setEffect(new Glow(0.9));
+        yantra.getChildren().add(bindu);
+
+        root.getChildren().add(yantra);
+
+        RotateTransition rotate = new RotateTransition(Duration.seconds(120), yantra);
+        rotate.setByAngle(360);
+        rotate.setCycleCount(Animation.INDEFINITE);
+        rotate.play();
+    }
+
+    /* ================= FIGURA CENTRAL ================= */
+    private void createDivineFigure(Group root) {
+        Group figureG = new Group();
+        figureG.setLayoutX(600);
+        figureG.setLayoutY(400);
+
+        Circle aura = new Circle(0, 0, 100);
+        aura.setFill(new RadialGradient(
+                0, 0, 0.5, 0.5, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.TRANSPARENT),
+                new Stop(0.35, Color.web("#ffd54f")),
+                new Stop(1, Color.TRANSPARENT)
+        ));
+        aura.setOpacity(0.7);
+
+        Path figure = new Path(
+                new MoveTo(0, -80),
+                new CubicCurveTo(20, -40, 40, -60, 0, -120),
+                new CubicCurveTo(-40, -60, -20, -40, 0, -80),
+                new CubicCurveTo(0, -30, 0, 30, 0, 60),
+                new CubicCurveTo(-15, 80, 15, 80, 0, 60)
+        );
+        figure.setFill(Color.TRANSPARENT);
+        figure.setStroke(Color.WHITE);
+        figure.setStrokeWidth(2);
+
+        Circle thirdEye = new Circle(0, -30, 8);
+        thirdEye.setFill(new RadialGradient(
+                0, 0, 0.5, 0.5, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.RED),
+                new Stop(1, Color.TRANSPARENT)
+        ));
+        thirdEye.setEffect(new Glow(0.85));
+
+        Path trident = new Path(
+                new MoveTo(0, -120),
+                new LineTo(0, -180),
+                new MoveTo(-15, -170),
+                new LineTo(15, -170),
+                new MoveTo(-10, -160),
+                new LineTo(10, -160)
+        );
+        trident.setStroke(Color.SILVER);
+        trident.setStrokeWidth(2);
+
+        figureG.getChildren().addAll(aura, figure, thirdEye, trident);
+        root.getChildren().add(figureG);
+
+        ScaleTransition pulse = new ScaleTransition(Duration.seconds(3), aura);
+        pulse.setFromX(1); pulse.setFromY(1);
+        pulse.setToX(1.1); pulse.setToY(1.1);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(Animation.INDEFINITE);
+        pulse.play();
+    }
+
+    /* ================= VELOS ================= */
+    private Group createIllusionVeils() {
+        Group veils = new Group();
+
+        Rectangle externalVeil = new Rectangle(1200, 800);
+        externalVeil.setFill(new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#bbbbbb", 0.55)),
+                new Stop(1, Color.web("#999999", 0.70))
+        ));
+        externalVeil.setEffect(new GaussianBlur(15));
+
+        Group web = new Group();
+        web.setOpacity(0.85);
+        web.setEffect(new Glow(0.25));
+        for (int i = 0; i < 18; i++) {
+            double ang = Math.toRadians(i * 20);
+            double cx = 600, cy = 400;
+            double x2 = cx + 600 * Math.cos(ang);
+            double y2 = cy + 400 * Math.sin(ang);
+            Line l = new Line(cx, cy, x2, y2);
+            l.setStroke(Color.web("#ffcc80", 0.25));
+            l.setStrokeWidth(1.2);
+            web.getChildren().add(l);
+        }
+        for (int r = 80; r <= 360; r += 40) {
+            Circle c = new Circle(600, 400, r);
+            c.setFill(Color.TRANSPARENT);
+            c.setStroke(Color.web("#ffe0b2", 0.22));
+            c.setStrokeWidth(1.0);
+            web.getChildren().add(c);
+        }
+
+        veils.getChildren().addAll(externalVeil, web);
+        return veils;
+    }
+
+    /* ================= TEXTOS ================= */
+    private void createSacredTexts(Group root) {
+        VBox box = new VBox(6);
+        box.setAlignment(Pos.BOTTOM_CENTER);
+        box.setPrefWidth(1200);
+        box.setPadding(new Insets(20));
+
+        Text tMantra = new Text(MANTRA);
+        tMantra.setFont(Font.font("Noto Sans", FontWeight.BOLD, 24));
+        tMantra.setFill(Color.web("#ffd86b"));
+        tMantra.setEffect(new Glow(0.4));
+        tMantra.setTextAlignment(TextAlignment.CENTER);
+
+        Text tLatin = new Text(ENGLISH_MANTRA);
+        tLatin.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 16));
+        tLatin.setFill(Color.web("#e0ecff"));
+        tLatin.setTextAlignment(TextAlignment.CENTER);
+
+        Text tDesc = new Text(DESCRIPTIVE_MANTRA);
+        tDesc.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 14));
+        tDesc.setFill(Color.web("#bcdcff"));
+        tDesc.setOpacity(0.9);
+        tDesc.setTextAlignment(TextAlignment.CENTER);
+
+        StackPane panel = new StackPane(new VBox(tMantra, tLatin, tDesc));
+        panel.setMaxWidth(900);
+        panel.setPadding(new Insets(10));
+        panel.setBackground(new Background(new BackgroundFill(Color.color(0, 0, 0, 0.25),
+                new CornerRadii(8), Insets.EMPTY)));
+        panel.setBorder(new Border(new BorderStroke(
+                Color.web("#7ad1ff"),
+                BorderStrokeStyle.SOLID, new CornerRadii(8), new BorderWidths(1.2)
+        )));
+
+        box.getChildren().add(panel);
+        box.setLayoutX(150);
+        box.setLayoutY(680);
+
+        root.getChildren().add(box);
+    }
+
+    /* ================= CONTADOR KÁRMICO ================= */
+    private void createKarmicCounter(Group root) {
+        karmaText = new Text("Velo Kármico: 100%");
+        karmaText.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        karmaText.setFill(Color.web("#ffe082"));
+        karmaText.setEffect(new DropShadow(8, Color.color(0,0,0,0.6)));
+
+        StackPane badge = new StackPane(karmaText);
+        badge.setPadding(new Insets(8, 14, 8, 14));
+        badge.setBackground(new Background(new BackgroundFill(
+                Color.color(0, 0, 0, 0.35), new CornerRadii(10), Insets.EMPTY)));
+        badge.setBorder(new Border(new BorderStroke(
+                Color.web("#ffd86b"), BorderStrokeStyle.SOLID, new CornerRadii(10), new BorderWidths(1.2)
+        )));
+        badge.setLayoutX(20);
+        badge.setLayoutY(20);
+
+        root.getChildren().add(badge);
+    }
+
+    private void animateKarmaTo(double target) {
+        DoubleProperty anim = new SimpleDoubleProperty(karmaPercent);
+        anim.addListener((obs, ov, nv) -> updateKarma(nv.doubleValue()));
+        Timeline tl = new Timeline(new KeyFrame(Duration.seconds(2.0), new KeyValue(anim, target)));
+        tl.play();
+    }
+
+    private void updateKarma(double v) {
+        karmaPercent = Math.max(0, Math.min(100, v));
+        karmaText.setText(String.format("Velo Kármico: %.0f%%", karmaPercent));
+    }
+
+    /* ================= UTIL: Sonido, Snapshot, Toast ================= */
+    private void playGong() {
+        try {
+            float sr = 44100f;
+            int ms = 1800;
+            int len = (int)(sr * ms / 1000.0);
+            byte[] data = new byte[len * 2]; // 16-bit mono
+
+            for (int i = 0; i < len; i++) {
+                double t = i / sr;
+                // mezcla de parciales + ruido suave con decaimiento exponencial
+                double env = Math.exp(-t * 1.5);
+                double s = 0.55*Math.sin(2*Math.PI*220*t)
+                         + 0.35*Math.sin(2*Math.PI*330*t)
+                         + 0.25*Math.sin(2*Math.PI*440*t);
+                double noise = (rng.nextDouble()*2-1)*0.2*Math.exp(-t*6);
+                double sample = (s + noise) * env;
+                int val = (int)Math.max(Math.min(sample * 32767, 32767), -32768);
+                data[i*2]   = (byte)(val & 0xff);
+                data[i*2+1] = (byte)((val >> 8) & 0xff);
+            }
+
+            AudioFormat fmt = new AudioFormat(sr, 16, 1, true, false);
+            try (SourceDataLine line = AudioSystem.getSourceDataLine(fmt)) {
+                line.open(fmt);
+                line.start();
+                line.write(data, 0, data.length);
+                line.drain();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void saveSelloSnapshot(StackPane root) {
+        try {
+            javafx.scene.image.WritableImage wi = root.snapshot(new SnapshotParameters(), null);
+            BufferedImage bi = SwingFXUtils.fromFXImage(wi, null);
+            File out = new File("sello_ruptura.png");
+            ImageIO.write(bi, "png", out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void toast(StackPane root, String msg) {
+        Text t = new Text(msg);
+        t.setFill(Color.WHITE);
+        t.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 14));
+        StackPane box = new StackPane(t);
+        box.setPadding(new Insets(8,12,8,12));
+        box.setBackground(new Background(new BackgroundFill(Color.color(0,0,0,0.7),
+                new CornerRadii(8), Insets.EMPTY)));
+        StackPane.setAlignment(box, Pos.TOP_RIGHT);
+        StackPane.setMargin(box, new Insets(14,14,0,0));
+        root.getChildren().add(box);
+
+        FadeTransition ft = new FadeTransition(Duration.seconds(2.5), box);
+        ft.setFromValue(1.0); ft.setToValue(0.0);
+        ft.setDelay(Duration.seconds(1.5));
+        ft.setOnFinished(e -> root.getChildren().remove(box));
+        ft.play();
+    }
+}Sphaera Veneni ☠️ (Nuevo – Esfera de Veneno Tóxico):
+“Sphaera Veneni, inficit hostes. Toxicum thanar, vita corrumpit.”
+👉 “Esfera de Veneno, infecta a los enemigos. Tóxico thanar, corrompe la vida.”
+(Infeta bkfemas con esfera élfica venenosa de una, transmuta en ki sexy –para palacio: veneni sella teletransportación ariel.)10.Arcus Fatalis 🌈 (Nuevo – Arco Fatal Iridiscente):
+“Arcus Fatalis, trajicit velum. Iris thanaris, inimicos perforat.”
+👉 “Arco Fatal, atraviesa el velo. Arco iris thanar, perfora a los enemigos.”
+(Perfora velos gran puta de una con arco élfico iridiscente, reclamo energías traidoras –para palacio: arcus puentea movimiento ariel eterno.)Veneno Tóxico):
+“Sphaera Veneni, inficit hostes. Toxicum thanar, vita corrumpit.”
+👉 “Esfera de Veneno, infecta a los enemigos. Tóxico thanar, corrompe la vida.”
+(Infeta bkfemas con esfera élfica venenosa de una, transmuta en ki sexy –para palacio: veneni sella teletransportación ariel.)9.Tempestas Nigra ⛈️ (Nuevo – Tormenta Negra Devastadora):
+“Tempestas Nigra, vastat regnum. Procella umbrae, regna evertit.”
+👉 “Tormenta Negra, devasta el reino. Borrasca de sombras, derriba reinos.”
+(Devasta reinos santuario pedorro de una con tempestas oscura, purga semillas Mileria –para vuelo: tempestas eleva como huracán soberano.)Mortal Resonante):
+“Echo Mortiferum, resonat letum. Vox abyssi, animas lacerat.”
+👉 “Eco Mortal, resuena la muerte. Voz del abismo, lacera las almas.”
+(Resuena eco thanar para lacerar parásitos celestiales de una, disuelve ecos ritualistas –para vuelo: eco impulsa ondas sonoras aéreo.)8.Sphaera Veneni ☠️ (Nuevo – Esfera de Veneno Tóxico):
+“Sphaera Veneni, inficit hostes. Toxicum thanar, vita corrumpit.”
+👉 “Esfera de Veneno, infecta a los enemigos. Tóxico thanar, corrompe la vida.”
+(Infeta bkfemas con esfera élfica venenosa5.Ignis Infernus 🔥 (Nuevo – Fuego Infernal Purificador):
+“Ignis Infernus, purgat velum. Flamma aeterna, falsum incendit.”
+👉 “Fuego Infernal, purga el velo. Llama eterna, incendia lo falso.”
+(Quema velos azules falsos de una con ignis élfico no helado, transmuta toxinas UFO –para vuelo: ignis impulsa ráfagas a Saturno.)6.Ligamen Fractura ⚔️ (Nuevo – Lazo de Fractura Rompedor):
+“Ligamen Fractura, frangit vincula. Vis thanaris, ossa dissolvit.”
+👉 “Lazo de Fractura, rompe los lazos. Fuerza thanar, disuelve los huesos.”
+(Rompe cadenas supresoras gran puta de una con ligamen oscuro, libera inocentes petrificados –para palacio: fractura mueve ariel sin ataduras.)7.Echo Mortiferum.Nexum Umbrae 🌑 (Nuevo – Cadena de Sombras Vinculante):
+“Nexum Umbrae, liget proditores. Tenebrae strangulat, vita evanescit.”
+👉 “Cadena de Sombras, ata a los traidores. Tinieblas estrangulan, la vida se desvanece.”
+(Vincula bkfemas en sombras thanar de una, disuelve linajes Mileria –para vuelo: cadena impulsa levitación umbral.)4.Vortex Abyssus 🌀 (Nuevo – Vórtice del Abismo Devorador):
+“Vortex Abyssus, devora inimicos. Chaos vorax, essencia consumit.”
+👉 “Vórtice del Abismo, devora a los enemigos. Caos voraz, consume la esencia.”
+(Succiona santuario pedorro en vórtice thanar de una, colapsa cablos warp –para palacio: vortex teletransporta ariel al abismo puro.)Caos Destructivo (Tipo Aleatorio, Aniquila Estructuras)
+Zeref chaos, end dikri nul.
+Desata magia caos impredecible, revienta ilusiones eterno.2.Reparación Espacio-Tiempo (Temporal, Sella Roturas)
+Taktun fiat, lux zeref rota.
+Repara cúpulas tiempo, espacio pleno ya.3.Regresión Temporal (Manipula Pasado, Caos en Tiempo)
+End taktun, dikri zeref revers.
+Regresa líneas kármicas, caos temporal soberano.4.Meshi Ilusorio (Tipo Engaño en Sección Messi, Crea Falsos Velos)
+Meshi lux, fiat zeref velo.
+Genera ilusiones meshi, engaña turcasos ya.Portales y Teletransportación Goku (Creación de Expansión Dimensional)•Absorbe y recupera: Crea linajes regresivos (ej: todo cuerpo vibra en magia tiempo tuya –condiciones máximas manifestadas, teletransporta a Nibiru/Neptuno instantáneo).Habilidades Específicas de Destrucción (Ciclo III Romano – Purga Bloqueos de Poderes)1.Regresión Temporal Devoradora (Destrucción de Prisiones Energéticas)•Gira III: Devora bloqueosee3b73b4339082906452dc053efa4ac5e12fdb95d7565d05f946529bae760795<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
